@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lakbay — Interactive Prototype</title>
+<style>
+  :root{
+    --ink:#16212e;
+    --deep:#143C5C;      /* deep recovery blue */
+    --sea:#1B7A8C;       /* teal calm */
+    --coral:#E0584F;     /* alert/crisis */
+    --gold:#F2B705;      /* milestone gold */
+    --leaf:#2E9E6B;      /* progress green */
+    --paper:#F4F7F9;
+    --card:#ffffff;
+    --line:#E2EAF0;
+    --mut:#67788a;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{
+    font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
+    background:
+      radial-gradient(1200px 600px at 15% -10%, #1B7A8C22, transparent),
+      radial-gradient(1000px 500px at 110% 10%, #143C5C18, transparent),
+      #0e2230;
+    min-height:100vh;
+    display:flex;flex-direction:column;align-items:center;
+    padding:28px 16px 60px;color:var(--ink);
+  }
+  .brandbar{text-align:center;color:#eaf2f6;margin-bottom:20px;max-width:560px}
+  .brandbar h1{font-size:30px;letter-spacing:5px;font-weight:800}
+  .brandbar h1 span{color:var(--gold)}
+  .brandbar p{color:#a9c2cf;font-size:13px;margin-top:4px;letter-spacing:.3px}
+  .hint{
+    display:inline-block;margin-top:12px;font-size:11.5px;color:#0e2230;
+    background:var(--gold);padding:5px 13px;border-radius:20px;font-weight:700;letter-spacing:.3px
+  }
+
+  /* PHONE */
+  .phone{
+    width:360px;height:740px;background:#000;border-radius:44px;
+    padding:11px;box-shadow:0 30px 70px rgba(0,0,0,.55), inset 0 0 0 2px #2a2a2a;
+    position:relative;
+  }
+  .screen{
+    width:100%;height:100%;background:var(--paper);border-radius:34px;overflow:hidden;
+    position:relative;display:flex;flex-direction:column;
+  }
+  .notch{position:absolute;top:0;left:50%;transform:translateX(-50%);width:130px;height:24px;background:#000;border-radius:0 0 16px 16px;z-index:50}
+
+  /* status bar */
+  .status{height:34px;display:flex;align-items:center;justify-content:space-between;
+    padding:0 22px;font-size:11.5px;font-weight:600;color:var(--ink);flex:0 0 auto}
+
+  /* view system */
+  .views{flex:1;position:relative;overflow:hidden}
+  .view{position:absolute;inset:0;overflow-y:auto;padding:6px 18px 90px;display:none;animation:fade .28s ease}
+  .view.active{display:block}
+  .view::-webkit-scrollbar{width:0}
+  @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+  .top{display:flex;align-items:center;gap:10px;margin:6px 0 14px}
+  .top .back{width:34px;height:34px;border-radius:11px;background:#fff;border:1px solid var(--line);
+    display:grid;place-items:center;font-size:17px;color:var(--deep);cursor:pointer}
+  .top h2{font-size:19px;color:var(--deep);font-weight:800;letter-spacing:.2px}
+  .top .sub{font-size:12px;color:var(--mut);margin-top:1px}
+
+  /* HOME greeting */
+  .hello{margin:10px 0 4px}
+  .hello .hi{font-size:13px;color:var(--mut)}
+  .hello .nm{font-size:24px;font-weight:800;color:var(--deep)}
+
+  .streak{
+    margin:14px 0;border-radius:22px;padding:20px;color:#fff;position:relative;overflow:hidden;
+    background:linear-gradient(135deg,var(--deep),var(--sea));
+    box-shadow:0 14px 30px #143c5c44;
+  }
+  .streak .ring{position:absolute;right:-30px;top:-30px;width:150px;height:150px;border-radius:50%;
+    background:#ffffff14}
+  .streak .lab{font-size:12px;opacity:.85;letter-spacing:1px;text-transform:uppercase}
+  .streak .big{font-size:46px;font-weight:800;line-height:1;margin:6px 0}
+  .streak .big small{font-size:16px;font-weight:600;opacity:.9}
+  .streak .nx{font-size:12px;opacity:.9;margin-top:6px}
+  .streak .bar{height:7px;background:#ffffff33;border-radius:4px;margin-top:9px;overflow:hidden}
+  .streak .bar i{display:block;height:100%;width:73%;background:var(--gold);border-radius:4px}
+
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+  .tile{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:15px 14px;cursor:pointer;
+    transition:transform .12s, box-shadow .12s}
+  .tile:active{transform:scale(.97)}
+  .tile .ic{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;font-size:20px;margin-bottom:10px}
+  .tile .t{font-weight:700;font-size:14.5px;color:var(--ink)}
+  .tile .d{font-size:11.5px;color:var(--mut);margin-top:2px;line-height:1.3}
+  .ic.b{background:#E7F3F6;color:var(--sea)}
+  .ic.g{background:#FBF1D2;color:#B8860B}
+  .ic.c{background:#FCE9E7;color:var(--coral)}
+  .ic.p{background:#E6F3EC;color:var(--leaf)}
+  .ic.k{background:#E9EDF5;color:var(--deep)}
+
+  .sec-t{font-size:13px;font-weight:800;color:var(--deep);text-transform:uppercase;letter-spacing:.6px;margin:6px 2px 10px}
+
+  /* crisis banner */
+  .crisisbtn{
+    width:100%;border:none;cursor:pointer;border-radius:18px;padding:16px;color:#fff;font-weight:800;font-size:16px;
+    background:linear-gradient(135deg,var(--coral),#c0392b);box-shadow:0 12px 26px #e0584f4d;
+    display:flex;align-items:center;justify-content:center;gap:9px;margin-bottom:8px}
+  .crisisbtn small{display:block;font-weight:500;font-size:11px;opacity:.92}
+
+  /* CHECK-IN */
+  .q{font-size:16px;font-weight:700;color:var(--ink);margin:18px 0 12px}
+  .moods{display:flex;justify-content:space-between;gap:7px;margin-bottom:8px}
+  .mood{flex:1;aspect-ratio:1;border-radius:16px;background:#fff;border:2px solid var(--line);
+    display:grid;place-items:center;font-size:26px;cursor:pointer;transition:.15s}
+  .mood:active{transform:scale(.9)}
+  .mood.sel{border-color:var(--sea);background:#E7F3F6;transform:scale(1.05)}
+  .slabel{display:flex;justify-content:space-between;font-size:11px;color:var(--mut);margin-bottom:18px}
+  .sliderwrap{margin:8px 0 4px}
+  .srow{display:flex;justify-content:space-between;align-items:center;font-size:14px;font-weight:600;color:var(--ink);margin-bottom:8px}
+  input[type=range]{width:100%;accent-color:var(--sea);height:6px}
+  .crave{accent-color:var(--coral)}
+  .note{width:100%;border:1px solid var(--line);border-radius:14px;background:#fff;padding:12px;
+    font-family:inherit;font-size:13px;resize:none;min-height:72px;color:var(--ink)}
+  .privacy-tag{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--leaf);font-weight:600;margin:10px 2px}
+  .cta{width:100%;border:none;cursor:pointer;border-radius:16px;padding:15px;background:var(--deep);color:#fff;
+    font-size:15px;font-weight:700;margin-top:14px;transition:.12s}
+  .cta:active{transform:scale(.98)}
+  .cta.teal{background:var(--sea)} .cta.green{background:var(--leaf)}
+  .cta.ghost{background:#fff;color:var(--deep);border:1.5px solid var(--deep)}
+
+  .done{text-align:center;padding-top:40px}
+  .done .big{width:96px;height:96px;border-radius:50%;background:#E6F3EC;color:var(--leaf);
+    display:grid;place-items:center;font-size:48px;margin:0 auto 18px;animation:pop .4s}
+  @keyframes pop{0%{transform:scale(.4);opacity:0}60%{transform:scale(1.1)}100%{transform:scale(1)}}
+  .done h3{font-size:21px;color:var(--deep);font-weight:800}
+  .done p{font-size:13.5px;color:var(--mut);margin-top:8px;line-height:1.5;padding:0 6px}
+
+  /* CRISIS view */
+  .crisis-head{background:linear-gradient(135deg,var(--coral),#b83227);margin:-6px -18px 16px;padding:24px 20px 20px;color:#fff;border-radius:0 0 26px 26px}
+  .crisis-head h2{font-size:22px;font-weight:800}
+  .crisis-head p{font-size:13px;opacity:.95;margin-top:5px;line-height:1.4}
+  .breathe{background:#fff;border:1px solid var(--line);border-radius:18px;padding:20px;text-align:center;margin-bottom:14px}
+  .ball{width:120px;height:120px;border-radius:50%;margin:6px auto 12px;
+    background:radial-gradient(circle at 35% 35%,var(--sea),var(--deep));animation:breathe 8s ease-in-out infinite}
+  @keyframes breathe{0%,100%{transform:scale(.7)}50%{transform:scale(1.05)}}
+  .breathe .word{font-size:15px;font-weight:700;color:var(--deep)}
+  .callrow{display:flex;align-items:center;gap:13px;background:#fff;border:1px solid var(--line);
+    border-radius:16px;padding:14px;margin-bottom:10px;cursor:pointer}
+  .callrow .cic{width:44px;height:44px;border-radius:13px;background:#FCE9E7;color:var(--coral);
+    display:grid;place-items:center;font-size:21px;flex:0 0 auto}
+  .callrow .t{font-weight:700;font-size:14.5px}
+  .callrow .d{font-size:11.5px;color:var(--mut)}
+  .callrow .go{margin-left:auto;color:var(--leaf);font-size:20px}
+  .plan{background:#E7F3F6;border-radius:16px;padding:15px;margin-bottom:12px}
+  .plan h4{font-size:13px;color:var(--deep);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px}
+  .plan li{font-size:13px;color:var(--ink);margin:0 0 7px 18px;line-height:1.4}
+
+  /* LEARN */
+  .lesson{background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden;margin-bottom:13px;cursor:pointer}
+  .lesson .ph{height:84px;display:grid;place-items:center;font-size:34px;color:#fff}
+  .lesson .bd{padding:12px 14px}
+  .lesson .tag{font-size:10px;font-weight:800;letter-spacing:.6px;color:var(--sea);text-transform:uppercase}
+  .lesson .t{font-size:15px;font-weight:700;color:var(--ink);margin:3px 0}
+  .lesson .m{font-size:11.5px;color:var(--mut)}
+
+  /* COMMUNITY */
+  .seg{display:flex;background:#E9EDF2;border-radius:13px;padding:4px;margin-bottom:14px}
+  .seg button{flex:1;border:none;background:none;padding:9px;border-radius:10px;font-weight:700;font-size:13px;color:var(--mut);cursor:pointer}
+  .seg button.on{background:#fff;color:var(--deep);box-shadow:0 2px 6px #0001}
+  .meet{display:flex;gap:12px;background:#fff;border:1px solid var(--line);border-radius:16px;padding:13px;margin-bottom:11px}
+  .meet .dt{flex:0 0 52px;text-align:center;background:var(--deep);color:#fff;border-radius:12px;padding:7px 0}
+  .meet .dt .d{font-size:19px;font-weight:800;line-height:1}
+  .meet .dt .mo{font-size:10px;opacity:.85;text-transform:uppercase}
+  .meet .t{font-weight:700;font-size:14px}
+  .meet .pl{font-size:11.5px;color:var(--mut);margin-top:2px}
+  .meet .tg{display:inline-block;margin-top:5px;font-size:10px;font-weight:700;color:var(--sea);background:#E7F3F6;padding:2px 8px;border-radius:8px}
+  .post{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:11px}
+  .post .who{display:flex;align-items:center;gap:9px;margin-bottom:8px}
+  .post .av{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--sea),var(--leaf));
+    display:grid;place-items:center;color:#fff;font-weight:700;font-size:13px}
+  .post .nm{font-weight:700;font-size:13px}.post .tm{font-size:10.5px;color:var(--mut)}
+  .post .tx{font-size:13px;color:var(--ink);line-height:1.45}
+  .post .react{display:flex;gap:16px;margin-top:10px;font-size:12px;color:var(--mut);font-weight:600}
+
+  /* SHARE */
+  .report{background:#fff;border:1px solid var(--line);border-radius:18px;padding:18px;margin-bottom:14px}
+  .report .rh{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding-bottom:11px;margin-bottom:11px}
+  .report .rh b{color:var(--deep);font-size:15px}
+  .report .rh span{font-size:11px;color:var(--mut)}
+  .rstat{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px dashed var(--line);font-size:13px}
+  .rstat:last-child{border:none}
+  .rstat .v{font-weight:800;color:var(--leaf)}
+  .rstat .v.amber{color:#C28800}
+  .consent{display:flex;gap:10px;background:#E6F3EC;border-radius:14px;padding:13px;font-size:12px;color:#1f6b43;line-height:1.45;margin-bottom:6px}
+
+  /* TAB BAR */
+  .tabs{position:absolute;bottom:0;left:0;right:0;height:72px;background:#fff;border-top:1px solid var(--line);
+    display:flex;align-items:center;justify-content:space-around;padding-bottom:8px;z-index:40}
+  .tab{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;color:var(--mut);cursor:pointer;font-weight:600;flex:1}
+  .tab .ti{font-size:20px}
+  .tab.on{color:var(--deep)}
+  .tab.on .ti{transform:translateY(-1px)}
+
+  .toast{position:absolute;bottom:92px;left:50%;transform:translateX(-50%) translateY(20px);
+    background:var(--ink);color:#fff;padding:11px 18px;border-radius:14px;font-size:12.5px;font-weight:600;
+    opacity:0;transition:.3s;z-index:60;white-space:nowrap;box-shadow:0 8px 20px #0004}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  .legend{margin-top:22px;color:#b9cdd8;font-size:12px;text-align:center;max-width:380px;line-height:1.6}
+  .legend b{color:#fff}
+</style>
+</head>
+<body>
+
+<div class="brandbar">
+  <h1>LAK<span>BAY</span></h1>
+  <p>Recovery companion &middot; DDB Hackathon 2026 &middot; Track 3: Mental Health</p>
+  <div class="hint">▶ Tap through it — every button works</div>
+</div>
+
+<div class="phone">
+  <div class="notch"></div>
+  <div class="screen">
+    <div class="status"><span>9:41</span><span>Lakbay</span><span>🔋 ▪▪▪</span></div>
+
+    <div class="views">
+
+      <!-- ===== HOME ===== -->
+      <section class="view active" id="home">
+        <div class="hello"><div class="hi">Good morning,</div><div class="nm">Kuya Migs 👋</div></div>
+
+        <div class="streak">
+          <div class="ring"></div>
+          <div class="lab">Days showing up</div>
+          <div class="big">73 <small>check-ins 🔥</small></div>
+          <div class="nx">17 days to your 90-day milestone 🏅 · streak counts showing up, not perfection</div>
+          <div class="bar"><i></i></div>
+        </div>
+
+        <button class="crisisbtn" onclick="go('crisis')">
+          <span style="font-size:20px">🛟</span>
+          <span>I'm Struggling Right Now<small>Get help in one tap — private &amp; immediate</small></span>
+        </button>
+
+        <div class="sec-t">Your day</div>
+        <div class="grid">
+          <div class="tile" onclick="go('checkin')">
+            <div class="ic b">📝</div><div class="t">Daily Check-In</div><div class="d">30 seconds. Log how you feel.</div>
+          </div>
+          <div class="tile" onclick="go('learn')">
+            <div class="ic k">📚</div><div class="t">Learn Hub</div><div class="d">Today: spotting triggers</div>
+          </div>
+          <div class="tile" onclick="nav('community')">
+            <div class="ic p">🤝</div><div class="t">Peer Circle</div><div class="d">3 new from your group</div>
+          </div>
+          <div class="tile" onclick="go('share')">
+            <div class="ic g">📤</div><div class="t">Share Report</div><div class="d">Checkup Fri — prep summary</div>
+          </div>
+        </div>
+
+        <div class="sec-t">Next meeting</div>
+        <div class="meet">
+          <div class="dt"><div class="d">16</div><div class="mo">Jun</div></div>
+          <div><div class="t">NA Open Meeting — Cebu</div><div class="pl">Fuente Osmeña · 6:00 PM</div><span class="tg">Reminder set</span></div>
+        </div>
+
+        <div class="sec-t">A note for you</div>
+        <div class="meet" style="border-color:#CFE6CF;background:#F1F9F1" onclick="toast('Reply sent to Ms. Reyes 💚')">
+          <div class="dt" style="background:var(--leaf)"><div class="d">💬</div></div>
+          <div>
+            <div class="t">Kumusta ka, Migs?</div>
+            <div class="pl">From Ms. Reyes · your counselor</div>
+            <span class="tg" style="color:var(--leaf);background:#E6F3EC">Part of your aftercare — tap to reply</span>
+          </div>
+        </div>
+        <div style="font-size:10.5px;color:var(--mut);text-align:center;margin:2px 4px 0;line-height:1.4">
+          Your counselor checks in if you go quiet for a few days. You're enrolled in aftercare — but you always choose what you share.
+        </div>
+      </section>
+
+      <!-- ===== CHECK-IN ===== -->
+      <section class="view" id="checkin">
+        <div class="top"><div class="back" onclick="go('home')">‹</div>
+          <div><h2>Daily Check-In</h2><div class="sub">Only you can see this</div></div></div>
+
+        <div class="q">How are you feeling today?</div>
+        <div class="moods" id="moods">
+          <div class="mood" onclick="pickMood(this)">😞</div>
+          <div class="mood" onclick="pickMood(this)">😕</div>
+          <div class="mood sel" onclick="pickMood(this)">😐</div>
+          <div class="mood" onclick="pickMood(this)">🙂</div>
+          <div class="mood" onclick="pickMood(this)">😄</div>
+        </div>
+        <div class="slabel"><span>Tough day</span><span>Great day</span></div>
+
+        <div class="sliderwrap">
+          <div class="srow"><span>Craving intensity</span><span id="cv" style="color:var(--coral)">Low</span></div>
+          <input type="range" class="crave" min="0" max="3" value="1" oninput="setCrave(this.value)">
+        </div>
+        <div class="sliderwrap">
+          <div class="srow"><span>Sleep quality</span><span id="sl" style="color:var(--sea)">Good</span></div>
+          <input type="range" min="0" max="3" value="2" oninput="setSleep(this.value)">
+        </div>
+
+        <div class="q" style="font-size:14px">Want to write about it? <span style="font-weight:400;color:var(--mut)">(optional)</span></div>
+        <textarea class="note" placeholder="Today I felt steadier. Walked instead of skipping it…"></textarea>
+
+        <div class="privacy-tag">🔒 Private to you. Nothing is shared unless you choose to.</div>
+        <button class="cta teal" onclick="go('checkdone')">Save today's check-in</button>
+      </section>
+
+      <!-- ===== CHECK-IN DONE ===== -->
+      <section class="view" id="checkdone">
+        <div class="done">
+          <div class="big">✓</div>
+          <h3>Day 73 logged 🔥</h3>
+          <p>That's 6 days of showing up in a row. Streaks here reward turning up — not perfection. Even on a hard day, checking in keeps it alive.</p>
+          <button class="cta green" style="margin-top:26px" onclick="go('home')">Back to home</button>
+          <button class="cta ghost" onclick="go('share')">Add this to my counselor report</button>
+        </div>
+      </section>
+
+      <!-- ===== CRISIS ===== -->
+      <section class="view" id="crisis">
+        <div class="crisis-head">
+          <h2>You're not alone 🫂</h2>
+          <p>Take one breath with us. Help is one tap away, and nobody has to know unless you want them to.</p>
+        </div>
+
+        <div class="breathe">
+          <div class="ball"></div>
+          <div class="word">Breathe in… and out</div>
+        </div>
+
+        <div class="sec-t" style="color:var(--coral)">Reach someone now</div>
+        <div class="callrow" onclick="toast('Connecting to DOH NCMH 1553…')">
+          <div class="cic">📞</div>
+          <div><div class="t">NCMH Crisis Hotline</div><div class="d">1553 · 24/7 · free &amp; confidential</div></div>
+          <div class="go">›</div>
+        </div>
+        <div class="callrow" onclick="toast('Calling your assigned counselor…')">
+          <div class="cic">👤</div>
+          <div><div class="t">My Counselor — Ms. Reyes</div><div class="d">Tap to call · Mon–Sat</div></div>
+          <div class="go">›</div>
+        </div>
+
+        <div class="plan">
+          <h4>🛡 Your coping plan</h4>
+          <ul>
+            <li>Call Ate Linda before doing anything else.</li>
+            <li>Leave the room. Walk to the barangay court.</li>
+            <li>Remember why: for Mama and for myself.</li>
+          </ul>
+        </div>
+        <button class="cta ghost" onclick="go('home')">I'm okay for now</button>
+      </section>
+
+      <!-- ===== LEARN ===== -->
+      <section class="view" id="learn">
+        <div class="top"><div class="back" onclick="go('home')">‹</div>
+          <div><h2>Learn Hub</h2><div class="sub">Open to everyone — share freely</div></div></div>
+
+        <div class="lesson" onclick="toast('Opening lesson…')">
+          <div class="ph" style="background:linear-gradient(135deg,var(--deep),var(--sea))">🧠</div>
+          <div class="bd"><div class="tag">Track 1 · Prevention</div>
+            <div class="t">Spotting your triggers early</div><div class="m">3 min read · interactive</div></div>
+        </div>
+        <div class="lesson" onclick="toast('Opening lesson…')">
+          <div class="ph" style="background:linear-gradient(135deg,var(--leaf),#1b7a8c)">🔄</div>
+          <div class="bd"><div class="tag">Track 1 · Science</div>
+            <div class="t">Why relapse happens — and isn't failure</div><div class="m">4 min read</div></div>
+        </div>
+        <div class="lesson" onclick="toast('Opening lesson…')">
+          <div class="ph" style="background:linear-gradient(135deg,#C28800,var(--gold))">💬</div>
+          <div class="bd"><div class="tag">Track 1 · For families</div>
+            <div class="t">How to talk to someone in recovery</div><div class="m">5 min read</div></div>
+        </div>
+        <div class="lesson" onclick="toast('Opening quiz…')">
+          <div class="ph" style="background:linear-gradient(135deg,var(--coral),#b83227)">❓</div>
+          <div class="bd"><div class="tag">Quiz · Earn a badge</div>
+            <div class="t">Myth or fact: drug recovery</div><div class="m">6 questions · 2 min</div></div>
+        </div>
+      </section>
+
+      <!-- ===== COMMUNITY ===== -->
+      <section class="view" id="community">
+        <div class="top" style="margin-top:10px">
+          <div><h2>Peer Circle</h2><div class="sub">Anonymous &amp; safe — no real names ever</div></div></div>
+
+        <div class="seg">
+          <button class="on" id="segPeer" onclick="segTo('peer')">Support feed</button>
+          <button id="segMeet" onclick="segTo('meet')">Meetings</button>
+        </div>
+
+        <div id="peerPane">
+          <div class="post">
+            <div class="who"><div class="av">B</div><div><div class="nm">Bagani_07</div><div class="tm">12 min ago</div></div></div>
+            <div class="tx">Hit 6 months clean today. Some days I still wake up shaky, but I'm still here. To anyone on day 1 — it gets lighter. 💚</div>
+            <div class="react">❤️ 48 &nbsp; 💬 12 &nbsp; 🤝 Send strength</div>
+          </div>
+          <div class="post">
+            <div class="who"><div class="av">M</div><div><div class="nm">MalayaSoul</div><div class="tm">1 hr ago</div></div></div>
+            <div class="tx">Craving was bad after work. Used the breathing tool in here instead of going to my old spot. Sharing so the next person knows it works.</div>
+            <div class="react">❤️ 31 &nbsp; 💬 7 &nbsp; 🤝 Send strength</div>
+          </div>
+          <div class="post">
+            <div class="who"><div class="av">K</div><div><div class="nm">Kaagapay</div><div class="tm">3 hr ago</div></div></div>
+            <div class="tx">Reminder for the group: Saturday NA meeting moved to 5 PM. See you there, kaagapay. 🙌</div>
+            <div class="react">❤️ 22 &nbsp; 💬 4 &nbsp; 🤝 Send strength</div>
+          </div>
+        </div>
+
+        <div id="meetPane" style="display:none">
+          <div class="meet">
+            <div class="dt"><div class="d">16</div><div class="mo">Jun</div></div>
+            <div><div class="t">NA Open Meeting</div><div class="pl">Fuente Osmeña, Cebu · 6:00 PM</div><span class="tg">📍 1.2 km · Reminder set</span></div>
+          </div>
+          <div class="meet">
+            <div class="dt"><div class="d">18</div><div class="mo">Jun</div></div>
+            <div><div class="t">AA Step Study</div><div class="pl">Lahug Parish Hall · 7:00 PM</div><span class="tg">📍 3.0 km</span></div>
+          </div>
+          <div class="meet">
+            <div class="dt"><div class="d">21</div><div class="mo">Jun</div></div>
+            <div><div class="t">Family Support Circle</div><div class="pl">Online (Zoom) · 4:00 PM</div><span class="tg">💻 Virtual</span></div>
+          </div>
+          <div class="meet">
+            <div class="dt"><div class="d">22</div><div class="mo">Jun</div></div>
+            <div><div class="t">DDB Prevention Webinar</div><div class="pl">Online · 2:00 PM</div><span class="tg">Track 2 · Register</span></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== SHARE ===== -->
+      <section class="view" id="share">
+        <div class="top"><div class="back" onclick="go('home')">‹</div>
+          <div><h2>Share with Counselor</h2><div class="sub">You decide what's sent</div></div></div>
+
+        <div class="report">
+          <div class="rh"><b>Progress Summary</b><span>Last 14 days</span></div>
+          <div class="rstat"><span>Check-ins completed</span><span class="v">12 / 14</span></div>
+          <div class="rstat"><span>Average mood</span><span class="v">Steady ↗</span></div>
+          <div class="rstat"><span>Craving episodes</span><span class="v amber">3 (down from 6)</span></div>
+          <div class="rstat"><span>Sleep quality</span><span class="v">Good</span></div>
+          <div class="rstat"><span>Meetings attended</span><span class="v">4</span></div>
+          <div class="rstat"><span>Crisis tool used</span><span class="v amber">1 time</span></div>
+        </div>
+
+        <div class="consent">
+          <span style="font-size:18px">🔐</span>
+          <span>This report is built from your own check-ins. It is <b>not sent automatically</b>. It goes to Ms. Reyes only when you tap the button below — and you can preview every line first.</span>
+        </div>
+
+        <button class="cta" onclick="toast('Report sent to Ms. Reyes ✓')">Send to Ms. Reyes</button>
+        <button class="cta ghost" onclick="go('home')">Not now</button>
+      </section>
+
+    </div><!-- /views -->
+
+    <!-- TAB BAR -->
+    <div class="tabs">
+      <div class="tab on" id="tab-home" onclick="nav('home')"><span class="ti">🏠</span>Home</div>
+      <div class="tab" id="tab-learn" onclick="nav('learn')"><span class="ti">📚</span>Learn</div>
+      <div class="tab" id="tab-community" onclick="nav('community')"><span class="ti">🤝</span>Circle</div>
+      <div class="tab" id="tab-share" onclick="nav('share')"><span class="ti">📤</span>Share</div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+  </div>
+</div>
+
+<div class="legend">
+  <b>Prototype map:</b> Home → Daily Check-In, the red “I'm Struggling” crisis screen, Learn Hub (Track 1),
+  Peer Circle + Meeting Finder (Track 2), and the consent-based Share Report. <br>Built for the
+  <b>Design the DDB Mobile App Challenge</b> — IDADAIT 2026.
+</div>
+
+<script>
+  const tabFor = {home:'home', learn:'learn', community:'community', share:'share'};
+  function go(id){
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    document.querySelector('.views').scrollTop=0;
+    document.getElementById(id).scrollTop=0;
+  }
+  function nav(id){ go(id); setTab(id); }
+  function setTab(id){
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+    const t = document.getElementById('tab-'+id);
+    if(t) t.classList.add('on');
+  }
+  function pickMood(el){
+    document.querySelectorAll('#moods .mood').forEach(m=>m.classList.remove('sel'));
+    el.classList.add('sel');
+  }
+  const craveTxt=['None','Low','Moderate','Strong'];
+  const sleepTxt=['Poor','Fair','Good','Great'];
+  function setCrave(v){ document.getElementById('cv').textContent=craveTxt[v]; }
+  function setSleep(v){ document.getElementById('sl').textContent=sleepTxt[v]; }
+  function segTo(which){
+    document.getElementById('segPeer').classList.toggle('on', which==='peer');
+    document.getElementById('segMeet').classList.toggle('on', which==='meet');
+    document.getElementById('peerPane').style.display = which==='peer'?'block':'none';
+    document.getElementById('meetPane').style.display = which==='meet'?'block':'none';
+  }
+  let tmr;
+  function toast(msg){
+    const t=document.getElementById('toast');
+    t.textContent=msg; t.classList.add('show');
+    clearTimeout(tmr); tmr=setTimeout(()=>t.classList.remove('show'),2200);
+  }
+</script>
+</body>
+</html>
